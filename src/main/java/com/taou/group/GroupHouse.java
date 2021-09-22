@@ -1,35 +1,28 @@
 package com.taou.group;
 
 import org.assertj.core.util.Lists;
-import org.assertj.core.util.Sets;
 
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
-
 /**
- * @author SongShengLin
- * @date 2021/9/22 1:54 下午
+ * @author songshenglin
+ * @date 2021/9/22 23:36
  * @description
  */
-public class GroupWorker {
-
+public class GroupHouse {
     private static List<List<String>> inits;
 
     private static List<Worker> allWorkers = Lists.newArrayList();
-    private static List<Worker> bosses = Lists.newArrayList();
-    private static List<Worker> notBosses = Lists.newArrayList();
-    private static List<Worker> remain13Worker = Lists.newArrayList();
 
     private static final int CUR_YEAR = 2021;
 
-    // 需求2：分房，员工相差不超过5岁，入职时间混排
-    private static List<Worker> manWorkers = allWorkers.stream().filter(w -> w.getSex() == 0).collect(Collectors.toList());
-    private static List<Worker> womanWorkers = allWorkers.stream().filter(w -> w.getSex() == 1).collect(Collectors.toList());
-
 
     /**
-     * 需求1：25人一组，组内员工不超过5岁，不同部门，男女比例相同，入职时间是>1年的，带<1年的;6级以上的先摘出来
+     * 分房：员工不超过5岁，新员工带老员工
+     * 确认：2个人一间房？ 几个人一间房？
+     *
+     * @param args
      */
     public static void main(String[] args) {
         // 将原始数据转换为allWorkers
@@ -45,131 +38,13 @@ public class GroupWorker {
             allWorkers.add(worker);
         }
 
-        // bosses:赛选出大于6级的领导，notBosses:非6级的领导
-        for (Worker worker : allWorkers) {
-            if ("是".equals(worker.getLevel())) {
-                Worker temp = new Worker();
-                temp.setUserName(worker.getUserName());
-                temp.setDepartment(worker.getDepartment());
-                temp.setSex(worker.getSex());
-                temp.setBirthTime(worker.getBirthTime());
-                temp.setHireTime(worker.getHireTime());
-                temp.setLevel(worker.getLevel());
-                bosses.add(temp);
-            } else {
-                Worker temp = new Worker();
-                temp.setUserName(worker.getUserName());
-                temp.setDepartment(worker.getDepartment());
-                temp.setSex(worker.getSex());
-                temp.setBirthTime(worker.getBirthTime());
-                temp.setHireTime(worker.getHireTime());
-                temp.setLevel(worker.getLevel());
-                notBosses.add(temp);
-            }
-        }
-
-        // bosses:50人
-        // notBosses:488人
-        // allWorkers:538人
-
-        // 需求1
-        List<List<Worker>> res1 = Lists.newArrayList();
-        // 488人,488/23=21组,余8
-        for (int i = 0; i < 21; i++) {
-            List<Worker> oneGroup = getOneGroupList();
-
-            Worker boss = bosses.get((int) (Math.random() * bosses.size()));
-            oneGroup.add(boss);
-            bosses.remove(boss);
-            boss = bosses.get((int) (Math.random() * bosses.size()));
-            oneGroup.add(boss);
-            bosses.remove(boss);
-
-            res1.add(oneGroup);
-        }
-        System.out.println("----------------------------------");
-        System.out.println("剩余非boss");
-        notBosses.forEach(worker -> {
-            String old = worker.getHireTime() ? "老" : "新";
-            System.out.println(worker.getUserName() + "\t" + worker.getDepartment() + "\t" + worker.getSex() + "\t" + worker.getBirthTime() + "\t" + old + "\t" + worker.getLevel());
-        });
-        System.out.println("----------------------------------");
-
-        System.out.println("剩余boss");
-        bosses.forEach(worker -> {
-            String old = worker.getHireTime() ? "老" : "新";
-            System.out.println(worker.getUserName() + "\t" + worker.getDepartment() + "\t" + worker.getSex() + "\t" + worker.getBirthTime() + "\t" + old + "\t" + worker.getLevel());
-        });
-        System.out.println("----------------开始分组------------------");
-
-        System.out.println(notBosses.size());
-        System.out.println(bosses.size());// 8
-        for (List<Worker> workers : res1) {
-            System.out.println("----------------------------------");
-            workers.forEach(worker -> {
-                String old = worker.getHireTime() ? "老" : "新";
-                System.out.println(worker.getUserName() + "\t" + worker.getDepartment() + "\t" + worker.getSex() + "\t" + worker.getBirthTime() + "\t" + old + "\t" + worker.getLevel());
-            });
-            System.out.println("----------------------------------");
-        }
-
-
+        List<Worker> manList = allWorkers.stream().filter(worker -> worker.getSex() == 0).collect(Collectors.toList());
+        List<Worker> womanList = allWorkers.stream().filter(worker -> worker.getSex() == 1).collect(Collectors.toList());
+        System.out.println(manList.size());
+        System.out.println(womanList.size());
 
 
     }
-
-    /**
-     * 获得一个分组数据:25人一组，组内员工不超过5岁，不同部门，男女比例相同，入职时间是>1年的，带<1年的;6级以上的先摘出来
-     * 总：538人
-     * 6级：50人
-     * 非6级：488人,488/25=19组,余13人；先每组分24人，最后一人加6级，50-19=31；
-     */
-    public static List<Worker> getOneGroupList() {
-        List<Worker> oneGroup = new ArrayList<>();
-
-        Worker worker = notBosses.get((int) (Math.random() * notBosses.size()));
-        // 删除该员工
-        notBosses.remove(worker);
-        oneGroup.add(worker);
-
-        String depart = worker.getDepartment();
-        Integer sex = worker.getSex();
-        Integer birthday = worker.getBirthTime();
-        Boolean isOld = worker.getHireTime();
-        String level = worker.getLevel();
-
-        // 每一组先分配24人,之前加了1个，现在是23个
-        for (int i = 0; i < 22; i++) {
-            Worker next = getNextWorker(birthday, sex, isOld);
-            // 如果next不存在，就随机取一个
-            if (!Objects.isNull(next)) {
-                notBosses.remove(next);
-            } else {
-                next = notBosses.get((int) (Math.random() * notBosses.size()));
-                notBosses.remove(next);
-            }
-            oneGroup.add(next);
-        }
-
-        return oneGroup;
-    }
-
-    private static Worker getNextWorker(Integer birthday, Integer sex, Boolean isOld) {
-        List<Worker> nextList = notBosses.stream()
-                // 年纪<=5
-                .filter(w -> Math.abs(w.getBirthTime() - birthday) <= 5)
-                // 性别不一样
-                .filter(w -> !Objects.equals(w.getSex(), sex))
-                // 老员工带新员工
-                .filter(w -> !Objects.equals(w.getHireTime(), isOld))
-                .collect(Collectors.toList());
-        if (nextList.size() == 0) {
-            return null;
-        }
-        return nextList.get((int) (Math.random() * nextList.size()));
-    }
-
-
 
     // 获得原始的String数据
     public static List<List<String>> initWorkers() {
@@ -714,6 +589,4 @@ public class GroupWorker {
         workers.add(Lists.newArrayList("于挺", "政府事务", "男", "1986/6/29", "2021/9/16", ""));
         return workers;
     }
-
-
 }
