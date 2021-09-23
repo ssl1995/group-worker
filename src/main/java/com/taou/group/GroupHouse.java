@@ -2,7 +2,9 @@ package com.taou.group;
 
 import org.assertj.core.util.Lists;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -14,6 +16,9 @@ public class GroupHouse {
     private static List<List<String>> inits;
 
     private static List<Worker> allWorkers = Lists.newArrayList();
+
+//    private static List<Worker> allMan = Lists.newArrayList();
+//    private static List<Worker> allWomen = Lists.newArrayList();
 
     private static final int CUR_YEAR = 2021;
 
@@ -38,13 +43,78 @@ public class GroupHouse {
             allWorkers.add(worker);
         }
 
-        List<Worker> manList = allWorkers.stream().filter(worker -> worker.getSex() == 0).collect(Collectors.toList());
-        List<Worker> womanList = allWorkers.stream().filter(worker -> worker.getSex() == 1).collect(Collectors.toList());
-        System.out.println(manList.size());
-        System.out.println(womanList.size());
+        System.out.println("allWorkers:" + allWorkers.size());// 538
+        List<Worker> allMan = allWorkers.stream().filter(worker -> worker.getSex() == 0).collect(Collectors.toList());
+        List<Worker> allWomen = allWorkers.stream().filter(worker -> worker.getSex() == 1).collect(Collectors.toList());
+        System.out.println("allMan:" + allMan.size());// 290
+        System.out.println("allWomen:" + allWomen.size());// 248
+        System.out.println("----开始分房----");
+
+        List<List<Worker>> manRes = Lists.newArrayList();
+        int count1 = allMan.size() / 2;
+        for (int i = 0; i < count1; i++) {
+            List<Worker> oneGroup = getOneGroup(allMan);
+            manRes.add(oneGroup);
+        }
+//        System.out.println("manRes:" + manRes.size());// 145
+//        System.out.println("------------------manRes----------------");
+//        for (List<Worker> workers : manRes) {
+//            workers.forEach(worker -> {
+//                String old = worker.getHireTime() ? "老" : "新";
+//                System.out.println(worker.getUserName() + "\t" + worker.getDepartment() + "\t" + worker.getSex() + "\t" + worker.getBirthTime() + "\t" + old + "\t" + worker.getLevel());
+//            });
+//            System.out.println("----------------------------------");
+//        }
 
 
+        List<List<Worker>> womanRes = Lists.newArrayList();
+        int count2 = allWomen.size() / 2;
+        for (int i = 0; i < count2; i++) {
+            List<Worker> oneGroup = getOneGroup(allWomen);
+            womanRes.add(oneGroup);
+        }
+        System.out.println("womanRes:" + womanRes.size());// 124
+        System.out.println("------------------womanRes----------------");
+        for (List<Worker> workers : womanRes) {
+            workers.forEach(worker -> {
+                String old = worker.getHireTime() ? "老" : "新";
+                System.out.println(worker.getUserName() + "\t" + worker.getDepartment() + "\t" + worker.getSex() + "\t" + worker.getBirthTime() + "\t" + old + "\t" + worker.getLevel());
+            });
+            System.out.println("----------------------------------");
+        }
     }
+
+    public static List<Worker> getOneGroup(List<Worker> workers) {
+        List<Worker> oneGroup = new ArrayList<>();
+
+        Worker worker = workers.get((int) (Math.random() * workers.size()));
+        oneGroup.add(worker);
+        workers.remove(worker);
+        String depart = worker.getDepartment();
+        Boolean isOld = worker.getHireTime();
+
+        Worker next = getNextOne(workers, depart, isOld);
+        if (!Objects.isNull(next)) {
+            workers.remove(next);
+        } else {
+            next = workers.get((int) (Math.random() * workers.size()));
+            workers.remove(next);
+        }
+        oneGroup.add(next);
+        return oneGroup;
+    }
+
+    public static Worker getNextOne(List<Worker> workers, String depart, Boolean isOld) {
+        List<Worker> nextList = workers.stream()
+                .filter(w -> !Objects.equals(w.getHireTime(), isOld))
+                .filter(w -> !Objects.equals(w.getDepartment(), depart))
+                .collect(Collectors.toList());
+        if (nextList.size() == 0) {
+            return null;
+        }
+        return nextList.get((int) (Math.random() * nextList.size()));
+    }
+
 
     // 获得原始的String数据
     public static List<List<String>> initWorkers() {
